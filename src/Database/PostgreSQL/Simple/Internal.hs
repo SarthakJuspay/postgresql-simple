@@ -408,6 +408,18 @@ finishExecute _conn q result = do
 
 throwResultError :: ByteString -> PQ.Result -> PQ.ExecStatus -> IO a
 throwResultError _ result status = do
+    sfile   <- fromMaybe "" <$> PQ.resultErrorField result PQ.DiagSourceFile
+    sline  <- fromMaybe "" <$> PQ.resultErrorField result PQ.DiagSourceLine
+    sfunc  <- fromMaybe "" <$> PQ.resultErrorField result PQ.DiagSourceFunction
+    scontext  <- fromMaybe "" <$> PQ.resultErrorField result PQ.DiagContext
+    squery  <- fromMaybe "" <$> PQ.resultErrorField result PQ.DiagInternalQuery
+    spos  <- fromMaybe "" <$> PQ.resultErrorField result PQ.DiagStatementPosition
+    putStrLn (show sfile)
+    putStrLn (show sline)
+    putStrLn (show sfunc)
+    putStrLn (show scontext)
+    putStrLn (show squery)
+    putStrLn (show spos)
     errormsg  <- fromMaybe "" <$>
                  PQ.resultErrorField result PQ.DiagMessagePrimary
     detail    <- fromMaybe "" <$>
@@ -419,7 +431,7 @@ throwResultError _ result status = do
                        , sqlExecStatus = status
                        , sqlErrorMsg = errormsg
                        , sqlErrorDetail = detail
-                       , sqlErrorHint = hint }
+                       , sqlErrorHint = B8.pack ("DiagMessageHint: " <> (show hint) ++ " <> DiagSourceFile: " ++ (show sfile) ++ " <> DiagSourceLine: " ++ (show sline) ++ " <> DiagSourceFunction: " ++ (show sfunc) ++ " <> DiagContext: " ++ (show scontext) ++ " <> DiagInternalQuery: " ++ (show squery) ++ " <> DiagStatementPosition: " ++ (show spos))   }
 
 disconnectedError :: SqlError
 disconnectedError = fatalError "connection disconnected"
